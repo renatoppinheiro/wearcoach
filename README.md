@@ -13,7 +13,7 @@
 
 **WearCoach** is a local AI running coach running 100% on your machine. It connects your **Strava** activities with your recovery and wellness metrics from an **Oura Ring** or **Garmin**, turning raw training data into personalized daily briefings.
 
-> ⚠️ **Health & Safety Disclaimer:** WearCoach is **not** a medical professional or certified athletic trainer. Stop training immediately if you experience pain. You are solely responsible for your own training decisions.
+> ⚠️ **Disclaimer:** WearCoach is an experimental open-source project and is **not a product**. It is **not intended to replace professional running coaches or medical doctors**. Stop training immediately if you experience pain. You are solely responsible for your own training decisions.
 
 ---
 
@@ -158,7 +158,7 @@ Garmin lacks a self-serve developer API for personal wellness data; integration 
 
 **WearCoach** é um treinador de corrida pessoal baseado em IA que executa 100% localmente na sua máquina. Ele integra seus dados de atividades do **Strava** com suas métricas de recuperação e bem-estar do **Oura Ring** ou **Garmin**, gerando *briefings* diários de treino personalizados.
 
-> ⚠️ **Aviso de Saúde & Isenção de Responsabilidade:** O WearCoach **não** é um profissional médico ou de educação física. Pare o treino imediatamente em caso de dor. Você é o único responsável pelas suas decisões de treinamento.
+> ⚠️ **Isenção de Responsabilidade:** O WearCoach é um projeto experimental e **não é um produto**. Ele **não se destina a substituir treinadores de corrida profissionais nem médicos**. Pare o treino imediatamente em caso de dor. Você é o único responsável pelas suas decisões de treinamento.
 
 ---
 
