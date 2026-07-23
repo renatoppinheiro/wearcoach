@@ -95,6 +95,16 @@ and needs `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`:
 | `python main.py brief [--days N]` | `fetch`, then ask the built-in LLM for a briefing (standalone mode) |
 | `python main.py --help` | Full command reference |
 
+## Development
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
+
+Tests mock all network calls (Strava/Oura/Garmin/Anthropic/OpenAI) — no
+credentials or real accounts needed to run the suite.
+
 ## Why Oura instead of Garmin for wellness?
 
 Garmin has no self-serve developer API for personal wellness data — the only

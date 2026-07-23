@@ -20,9 +20,6 @@ import json
 import sys
 from datetime import date
 
-if hasattr(sys.stdout, "buffer"):  # Windows console default (cp1252) mangles em-dashes etc.
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
-
 if sys.version_info < (3, 10):
     sys.exit(f"wearcoach needs Python 3.10+ (found {sys.version.split()[0]}).")
 
@@ -228,4 +225,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "buffer"):  # Windows console default (cp1252) mangles em-dashes etc.
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
     raise SystemExit(main())
