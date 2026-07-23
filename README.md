@@ -1,10 +1,162 @@
 # wearcoach
 
-[![License: MIT](https://img.shields.io/badge/licença-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
-![Local only](https://img.shields.io/badge/hospedagem-100%25%20local-brightgreen)
+![Local only](https://img.shields.io/badge/hosting-100%25%20local-brightgreen)
 
-**WearCoach** é um treinador de corrida pessoal baseado em IA que executa 100% localmente na sua máquina. Ele integra seus dados de atividades do **Strava** com suas métricas de recuperação e bem-estar do **Oura Ring** ou **Garmin**, gerando *briefings* diários de treino altamente personalizados.
+🌐 **Languages / Idiomas:** [English](#english) | [Português (Brasil)](#português-brasil)
+
+---
+
+<a name="english"></a>
+# English
+
+**WearCoach** is a local AI running coach running 100% on your machine. It connects your **Strava** activities with your recovery and wellness metrics from an **Oura Ring** or **Garmin**, turning raw training data into personalized daily briefings.
+
+> ⚠️ **Health & Safety Disclaimer:** WearCoach is **not** a medical professional or certified athletic trainer. Stop training immediately if you experience pain. You are solely responsible for your own training decisions.
+
+---
+
+## 💡 How It Works (Choose Your Mode)
+
+WearCoach offers two ways to run:
+
+1. **🤖 Recommended: Using Your Own Coding Agent (Claude Code, Cursor, Windsurf, Copilot, etc.)**
+   - The Python scripts only fetch raw data into `data/`; your coding agent reads `CLAUDE.md` and acts directly as your coach.
+   - **Benefit:** No dedicated LLM API key required (uses whichever AI model/subscription you already have in your editor/CLI).
+   - **Persistent Memory:** The agent maintains a local knowledge base in `.wiki/` (powered by [llm-wiki](https://github.com/nvk/llm-wiki) implementing [Karpathy's LLM-wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)), preserving your race goals, injury history, HRV baselines, and training patterns across sessions.
+
+2. **⚡ Standalone Mode (CLI without a coding agent)**
+   - Run `python main.py brief` to directly query Claude (Anthropic) or GPT (OpenAI) via your own API key.
+   - Best if you prefer a single terminal command without interacting via an AI chat interface.
+
+---
+
+## 🛠️ Quick Setup (~5 min)
+
+### 1. Prerequisites & Installation
+Requires **Python 3.10+**.
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment variables template
+cp .env.example .env
+```
+
+### 2. Configure Integrations
+
+1. **Strava (Required, free, ~2 min):**
+   - Visit [Strava API Settings](https://www.strava.com/settings/api).
+   - Set *Authorization Callback Domain* to: `localhost`.
+   - Copy your **Client ID** and **Client Secret**.
+
+2. **Oura Ring (Optional — if you own an Oura ring):**
+   - Visit [Oura Cloud Applications](https://cloud.ouraring.com/oauth/applications).
+   - Set *Redirect URI* to: `http://localhost:8734/callback`.
+   - Copy your **Client ID** and **Client Secret**.
+
+3. **Garmin (Optional — if you have Garmin instead of Oura):**
+   - Have your **Garmin Connect email & password** ready (no API app registration required).
+
+### 3. Run Setup Wizard
+Run the interactive wizard:
+```bash
+python main.py setup
+```
+The wizard will ask if you are using a coding agent (skipping the LLM API key setup if so) and walk you through connecting Strava, Oura, or Garmin.
+
+---
+
+## 📖 How to Use
+
+### Mode 1: With Your Coding Agent (Recommended)
+
+1. **Fetch recent data:**
+   ```bash
+   python main.py fetch
+   ```
+2. Open this folder in your AI coding agent (**Claude Code**, **Cursor**, **Windsurf**, etc.).
+3. Ask in chat:
+   > *"Give me today's briefing"*
+   
+   The agent will read `CLAUDE.md`, inspect the latest snapshot in `data/`, and provide tailored coaching advice.
+4. Talk naturally with your coach:
+   - *"I felt a tweak in my knee during yesterday's run."*
+   - *"Plan my next 3 weeks targeting my upcoming marathon."*
+   - *"How is my HRV trend looking?"*
+
+#### 🧠 Persistent Training Memory (`.wiki/`)
+As you chat, durable context is saved into `.wiki/`:
+- **Claude Code users:** Install the plugin once per machine:
+  ```bash
+  claude plugin install wiki@llm-wiki
+  ```
+- **Other Agents (Cursor, Windsurf, Copilot, etc.):** Fetch the portable protocol once:
+  ```bash
+  curl -sL https://raw.githubusercontent.com/nvk/llm-wiki/master/AGENTS.md -o AGENTS.md
+  ```
+
+---
+
+### Mode 2: Standalone Mode (No Coding Agent)
+
+Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`.
+
+```bash
+# Pull recent activities & wellness to data/
+python main.py fetch
+
+# Fetch data & generate today's briefing directly in terminal (saved to data/briefing-YYYY-MM-DD.md)
+python main.py brief
+
+# Pull custom history window (default: 7 days, max: 60)
+python main.py fetch --days 14
+```
+
+---
+
+## 💻 Command Reference
+
+| Command | Description |
+|---|---|
+| `python main.py setup` | Interactive wizard to choose coach mode and connect accounts |
+| `python main.py fetch [--days N]` | Pull recent activities and wellness data into `data/` |
+| `python main.py brief [--days N]` | `fetch`, then ask built-in LLM for a daily briefing |
+| `python main.py --help` | Display CLI help and command options |
+
+---
+
+## 🧪 Development & Testing
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+> **Note:** Tests mock all network calls (Strava, Oura, Garmin, Anthropic, OpenAI) — no credentials or real accounts needed.
+
+---
+
+## 🔒 Privacy & Security
+
+- **100% Local:** No data is uploaded to any server controlled by this project (no backend, no remote hosting, no telemetry).
+- **Gitignored Secrets:** `.env` and `data/` are gitignored — your keys and token data never leave your computer.
+- **Garmin Credentials:** Passwords go directly to Garmin's official login via `garminconnect`.
+
+---
+
+## ❓ Why Oura instead of Garmin for Wellness?
+
+Garmin lacks a self-serve developer API for personal wellness data; integration relies on a community library. If you own an Oura Ring, its official OAuth2 API is safer and recommended.
+
+---
+
+<a name="português-brasil"></a>
+# Português (Brasil)
+
+**WearCoach** é um treinador de corrida pessoal baseado em IA que executa 100% localmente na sua máquina. Ele integra seus dados de atividades do **Strava** com suas métricas de recuperação e bem-estar do **Oura Ring** ou **Garmin**, gerando *briefings* diários de treino personalizados.
 
 > ⚠️ **Aviso de Saúde & Isenção de Responsabilidade:** O WearCoach **não** é um profissional médico ou de educação física. Pare o treino imediatamente em caso de dor. Você é o único responsável pelas suas decisões de treinamento.
 
@@ -16,7 +168,7 @@ O WearCoach oferece duas maneiras de ser utilizado:
 
 1. **🤖 Recomendado: Usando seu próprio Agente de Código (Claude Code, Cursor, Windsurf, Copilot, etc.)**
    - Os scripts em Python servem apenas para coletar os dados; o seu assistente de código lê o arquivo `CLAUDE.md` e atua diretamente como seu treinador.
-   - **Vantagem:** Não precisa de chave de API de LLM (usará o modelo/assinatura que você já possui no seu agente).
+   - **Vantagem:** Não precisa de chave de API de LLM dedicada (usará o modelo/assinatura que você já possui no seu editor/CLI).
    - **Memória Persistente:** O agente mantém um histórico de contexto contínuo (metas de provas, histórico de lesões, ritmos de referência e padrões) em uma base de conhecimento local em `.wiki/` (baseada no padrão [LLM-Wiki de Andrej Karpathy](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) via [llm-wiki](https://github.com/nvk/llm-wiki)).
 
 2. **⚡ Modo Standalone (CLI direto sem agente de código)**
