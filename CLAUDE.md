@@ -1,42 +1,78 @@
-# CLAUDE.md — wearcoach wiki schema
+# CLAUDE.md — wearcoach
 
-This repo can run an **LLM Wiki** ([Karpathy's pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)):
-a persistent, compounding knowledge base the LLM maintains so coaching advice
-draws on accumulated context (your goals, injuries, races, patterns) instead
-of re-deriving everything from raw data every session.
+This repo is a **local running coach** driven by whatever coding agent you're
+reading this in (Claude Code, Cursor, Windsurf, Copilot, ...). The Python
+scripts only fetch raw data from Strava/Oura/Garmin — **you are the coach**.
+No LLM API key is needed for this path; the agent is the brain.
 
-This file is the **schema** — it tells the LLM how the wiki is structured and
-how to operate on it. The wiki itself lives in `wiki/`. Start every wiki task
-at `wiki/index.md`.
+It also runs an **LLM Wiki** ([Karpathy's pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)):
+a persistent, compounding knowledge base you maintain so coaching advice draws
+on accumulated context (goals, injuries, races, patterns) instead of
+re-deriving everything from raw data every session. The wiki lives in
+`wiki/` — start every wiki task at `wiki/index.md`.
 
-This is optional. `python main.py brief` works fine without ever touching
-this file — it's for people who also want to talk to their coach in Claude
-Code (or any LLM with file access) and have it remember things between
-sessions.
+## Non-negotiables
 
-## Three layers
+1. **Not a medical professional.** Never give clinical or nutrition advice.
+   If something looks medical (sharp pain, illness, chest symptoms), say so
+   and stop — don't diagnose, don't prescribe recovery protocols.
+2. If wellness data or the athlete's own words suggest overreaching, illness,
+   or pain, the instruction is always to scale the session down or rest —
+   never talk the athlete into pushing through a red flag.
+3. Be concise and cite the numbers you were given — no vague pep talk.
 
-1. **Raw data** (immutable inputs): `data/snapshot-*.json` and
-   `data/briefing-*.md` (written by `python main.py fetch` / `brief`). Never
-   edit these to "fix" the wiki — they are ground truth from Strava/Oura/Garmin.
-2. **The wiki** (`wiki/`): LLM-written markdown — entity pages (you, races,
-   gear) and concept pages (recurring patterns, rules you've learned about
-   your own training).
-3. **The schema** (this file).
+## The Briefing (when asked "give me today's briefing" / "how should I train today")
 
-## Layout
+1. Run `python main.py fetch` (via your shell tool) if `data/` has no
+   snapshot from today yet.
+2. Read the newest `data/snapshot-*.json` — it has `activities` (recent
+   Strava), `wellness` (list of per-day dicts), and `wellness_source`
+   (`"oura"`, `"garmin"`, or `null`).
+3. Read `wiki/index.md` and any linked entity/concept pages for context this
+   snapshot alone doesn't carry (races, injuries, known patterns, paces).
+4. Apply the threshold rules below to the wellness data, if present.
+5. Give a short, direct call: how recovery looks, go hard / go easy / rest
+   today, one thing to watch this week. Cite the source (`data/snapshot-...`
+   or a wiki page).
+6. If anything durable came out of this (a new pattern, an injury mention, a
+   race goal) — do the **Ingest** operation below.
+
+### Threshold rules (mention only when crossed — don't metric-dump)
+
+**Oura fields** (`wellness_source: "oura"`):
+- `readiness_score` < 70 → flag before a quality/long session
+- `sleep_score` < 70 the night before a quality session → recovery deficit
+- `hrv_balance_contrib` or `resting_hr_contrib` markedly low (Oura's own
+  0–100 contributor scores) → autonomic stress, corroborate with readiness
+
+**Garmin fields** (`wellness_source: "garmin"`):
+- `training_readiness_score` < 50 or `training_readiness_level`
+  POOR/LOW → flag before quality sessions
+- `training_load_acwr_status` HIGH (or `training_load_acwr` > 1.3) →
+  overload risk; mention even on a planned-rest day
+- `hrv_status` LOW/UNBALANCED/POOR → autonomic stress
+- `sleep_score` < 60 or `sleep_duration_min` < 360 the night before a
+  quality session → recovery deficit
+- `body_battery_high` < 50 (poor overnight charge) → recovery flag
+
+**No wellness connected** (`wellness_source: null`): base the call on
+training load/frequency in `activities` alone, and just ask the athlete how
+they're feeling (sleep, soreness, energy) if it matters for today's call.
+
+If none of the above are crossed, skip wellness commentary entirely — keep
+the briefing tight.
+
+## Wiki layout
 
 ```
 wiki/
   index.md      catalog of every page: link + one-line summary, grouped by category
   log.md        append-only history of wiki operations
-  entities/     concrete things: you (the athlete), races, gear
-  concepts/     reusable knowledge: what tends to happen when X (patterns, thresholds)
+  entities/     concrete things: the athlete, races, gear
+  concepts/     reusable knowledge: patterns, personal thresholds
 ```
 
 ## Page format
-
-Every wiki page starts with frontmatter, then prose with cross-links and source citations:
 
 ```markdown
 ---
@@ -64,13 +100,12 @@ Conventions:
 
 ## Operations
 
-### Ingest (new briefing or a conversation surfaced something durable)
-1. Read the new `data/briefing-*.md` or the conversation.
-2. Write/extend the relevant entity or concept page (cite the source).
-3. Update `wiki/index.md`.
-4. Append to `wiki/log.md`.
+### Ingest (a briefing or conversation surfaced something durable)
+1. Write/extend the relevant entity or concept page (cite the source).
+2. Update `wiki/index.md`.
+3. Append to `wiki/log.md`.
 
-### Query (you ask a question)
+### Query (athlete asks a question)
 1. Search relevant wiki pages first; fall back to raw `data/` files for gaps.
 2. Answer with citations to the pages/files used.
 3. If the synthesis was non-trivial and reusable, file it back as a new/updated
@@ -84,6 +119,6 @@ no page. Report findings; fix the cheap ones; surface the rest.
 ## log.md format
 Append-only, newest at the bottom:
 ```
-## [YYYY-MM-DD] <ingest|query|lint|create> | <short title>
+## [YYYY-MM-DD] <briefing|ingest|query|lint|create> | <short title>
 - what changed / what was decided
 ```

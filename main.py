@@ -23,14 +23,22 @@ from coach import config, garmin, llm, oura, prompt, strava
 
 def cmd_setup() -> None:
     print(__doc__)
-    print("\n--- LLM provider ---")
-    provider = input("Use 'anthropic' (Claude) or 'openai' (GPT)? [anthropic]: ").strip() or "anthropic"
-    config.set_env_value("LLM_PROVIDER", provider)
-    key_name = "ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENAI_API_KEY"
-    if not config.env(key_name):
-        key = input(f"Paste your {key_name}: ").strip()
-        if key:
-            config.set_env_value(key_name, key)
+    print("\n--- Coach ---")
+    print("Recommended: use a coding agent you already have (Claude Code, Cursor,")
+    print("Windsurf, Copilot, ...) — open this folder in it and just talk to it.")
+    print("CLAUDE.md tells it what to do. No API key needed for this path.")
+    uses_agent = input("Will you use a coding agent as your coach? [Y/n]: ").strip().lower() != "n"
+    if uses_agent:
+        print("Good — skipping LLM key setup. See README 'How to use it' section.")
+    else:
+        print("\n--- LLM provider (for the standalone `python main.py brief` fallback) ---")
+        provider = input("Use 'anthropic' (Claude) or 'openai' (GPT)? [anthropic]: ").strip() or "anthropic"
+        config.set_env_value("LLM_PROVIDER", provider)
+        key_name = "ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENAI_API_KEY"
+        if not config.env(key_name):
+            key = input(f"Paste your {key_name}: ").strip()
+            if key:
+                config.set_env_value(key_name, key)
 
     print("\n--- Strava (required) ---")
     if input("Connect Strava now? [Y/n]: ").strip().lower() != "n":
@@ -61,7 +69,11 @@ def cmd_setup() -> None:
             config.set_env_value("GARMIN_PASSWORD", getpass.getpass("Garmin password: "))
         garmin.connect()
 
-    print("\nSetup done. Run: python main.py brief")
+    print("\nSetup done. Run: python main.py fetch")
+    if uses_agent:
+        print("Then open this folder in your coding agent and ask for today's briefing.")
+    else:
+        print("Then run: python main.py brief")
 
 
 def _fetch_all(days: int) -> tuple[list[dict], list[dict], str | None]:
