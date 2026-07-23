@@ -178,6 +178,15 @@ def cmd_brief(days: int) -> None:
     print(f"\nSaved to {out_path.relative_to(config.ROOT)}")
 
 
+def cmd_dashboard(host: str = "127.0.0.1", port: int = 8000) -> None:
+    try:
+        import uvicorn
+    except ImportError:
+        sys.exit("uvicorn is required to run the dashboard. Run: pip install -r requirements.txt")
+    print(f"Launching wearcoach local backend server at http://{host}:{port}")
+    uvicorn.run("coach.server:app", host=host, port=port, reload=False)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="wearcoach", description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command")
@@ -189,6 +198,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
     brief_p = sub.add_parser("brief", help="fetch + ask your coach for a briefing")
     brief_p.add_argument("--days", type=int, default=7, help="days of history to pull (default 7)")
+
+    dash_p = sub.add_parser("dashboard", help="launch local backend API & web dashboard")
+    dash_p.add_argument("--host", type=str, default="127.0.0.1", help="host to bind (default 127.0.0.1)")
+    dash_p.add_argument("--port", type=int, default=8000, help="port to bind (default 8000)")
 
     return parser
 
@@ -210,6 +223,10 @@ def main() -> int:
             if days < 1 or days > 60:
                 sys.exit("--days must be between 1 and 60")
             cmd_brief(days)
+        elif command == "dashboard":
+            host = getattr(args, "host", "127.0.0.1")
+            port = getattr(args, "port", 8000)
+            cmd_dashboard(host, port)
         else:
             parser.print_help()
             return 1
