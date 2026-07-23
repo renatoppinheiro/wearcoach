@@ -1,5 +1,9 @@
 # wearcoach
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Local only](https://img.shields.io/badge/hosting-none%2C%20fully%20local-brightgreen)
+
 Local AI running coach. Reads your Strava (+ optionally Oura ring or Garmin
 wellness) and turns it into a daily briefing. Runs entirely on your machine —
 your data never goes anywhere except Strava/Oura/Garmin and whichever LLM
@@ -65,14 +69,24 @@ writing any of it by hand.
 ## How to use it: standalone (no coding agent)
 
 ```
-python main.py fetch     # pull recent data only, save to data/
-python main.py brief     # fetch + ask your coach + print/save the briefing
+python main.py fetch                # pull recent data only, save to data/
+python main.py brief                 # fetch + ask your coach + print/save the briefing
+python main.py fetch --days 14       # pull more history (default 7, max 60)
 ```
 
 This mode is stateless (one snapshot in, one briefing out, no wiki memory)
 and needs `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`:
 - Claude: https://console.anthropic.com → API Keys
 - GPT: https://platform.openai.com → API Keys
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `python main.py setup` | Interactive wizard: pick coach mode, connect Strava/Oura/Garmin |
+| `python main.py fetch [--days N]` | Pull recent activities + wellness into `data/` |
+| `python main.py brief [--days N]` | `fetch`, then ask the built-in LLM for a briefing (standalone mode) |
+| `python main.py --help` | Full command reference |
 
 ## Why Oura instead of Garmin for wellness?
 
