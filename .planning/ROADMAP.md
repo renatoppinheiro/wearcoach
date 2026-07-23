@@ -12,7 +12,7 @@ This roadmap details the execution phases to deliver a local interactive web das
 **Goal:** Establish local web server infrastructure (`python main.py dashboard`) with REST endpoints to serve snapshot data, activity logs, and coach interface.
 **Requirements:** REQ-INF-01, REQ-INF-02  
 **Plans:** 2 plans  
-**Status:** Not Started  
+**Status:** Ready  
 
 ### Phase 2: Data Science & Analytics Engine
 **Goal:** Build ACWR (Acute:Chronic Workload Ratio) training load calculations, strain/fatigue curves, and HRV readiness trend analysis algorithms.
