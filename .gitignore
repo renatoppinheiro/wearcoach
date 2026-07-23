@@ -1,5 +1,6 @@
 .env
 data/
+.wiki/
 __pycache__/
 *.pyc
 .venv/

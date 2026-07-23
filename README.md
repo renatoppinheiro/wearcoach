@@ -57,14 +57,21 @@ Two ways to use it — pick one:
    to read and which thresholds matter — it'll run `fetch` itself if needed.
 4. Keep talking to it like a coach — "I tweaked my knee last week", "plan my
    next 3 weeks", "how's my training going". It files anything durable back
-   into `wiki/entities/` or `wiki/concepts/` (the
-   [Karpathy LLM-wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)),
+   into a local wiki at `.wiki/` (gitignored, personal to you — powered by
+   [llm-wiki](https://github.com/nvk/llm-wiki), which implements
+   [Karpathy's LLM-wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)),
    so it remembers your goals, injuries, and races across sessions instead of
    starting fresh every time.
 
-Over time `wiki/` becomes your own running history and rulebook — race
+**Claude Code users:** install the wiki plugin once per machine —
+`claude plugin install wiki@llm-wiki` — it's what makes step 4 work.
+**Other agents:** grab the portable protocol once —
+`curl -sL https://raw.githubusercontent.com/nvk/llm-wiki/master/AGENTS.md -o AGENTS.md`.
+
+Over time `.wiki/` becomes your own running history and rulebook — race
 times, what wrecked your last taper, your actual HRV baseline — without you
-writing any of it by hand.
+writing any of it by hand. It's yours alone: `.wiki/` never gets committed,
+so cloning this repo always starts you with a blank wiki.
 
 ## How to use it: standalone (no coding agent)
 

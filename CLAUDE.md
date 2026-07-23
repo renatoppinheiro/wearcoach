@@ -5,11 +5,26 @@ reading this in (Claude Code, Cursor, Windsurf, Copilot, ...). The Python
 scripts only fetch raw data from Strava/Oura/Garmin — **you are the coach**.
 No LLM API key is needed for this path; the agent is the brain.
 
-It also runs an **LLM Wiki** ([Karpathy's pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)):
-a persistent, compounding knowledge base you maintain so coaching advice draws
-on accumulated context (goals, injuries, races, patterns) instead of
-re-deriving everything from raw data every session. The wiki lives in
-`wiki/` — start every wiki task at `wiki/index.md`.
+It also has a **persistent memory** via [llm-wiki](https://github.com/nvk/llm-wiki)
+(implements [Karpathy's LLM-wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)):
+a knowledge base you maintain across sessions so coaching draws on
+accumulated context (goals, injuries, races, patterns) instead of re-deriving
+everything from raw data every time. It lives at `.wiki/` in this project
+(local mode — gitignored, personal to whoever runs this install, does not
+travel with the repo).
+
+- **Claude Code**: install the plugin once per machine —
+  `claude plugin install wiki@llm-wiki` — then just talk naturally ("how's my
+  training going", "I tweaked my knee"). It routes itself to the right
+  operation (query/ingest/compile) and creates `.wiki/` on first use if it
+  doesn't exist yet (`/wiki:wiki init --local`).
+- **Other agents** (Cursor, Windsurf, Copilot, etc.): fetch the portable
+  protocol once — `curl -sL https://raw.githubusercontent.com/nvk/llm-wiki/master/AGENTS.md -o AGENTS.md`
+  — then use it the same way.
+- If `.wiki/` doesn't exist yet, treat `.wiki/config.md` and `.wiki/schema.md`
+  as needing to be created on first use — describe this as a running coach's
+  personal notes (races, injuries, wellness baselines, patterns), not a
+  general-purpose research wiki.
 
 ## Non-negotiables
 
@@ -28,14 +43,16 @@ re-deriving everything from raw data every session. The wiki lives in
 2. Read the newest `data/snapshot-*.json` — it has `activities` (recent
    Strava), `wellness` (list of per-day dicts), and `wellness_source`
    (`"oura"`, `"garmin"`, or `null`).
-3. Read `wiki/index.md` and any linked entity/concept pages for context this
-   snapshot alone doesn't carry (races, injuries, known patterns, paces).
+3. Query the wiki (`.wiki/`) for context this snapshot alone doesn't carry —
+   races, injuries, known patterns, paces.
 4. Apply the threshold rules below to the wellness data, if present.
 5. Give a short, direct call: how recovery looks, go hard / go easy / rest
    today, one thing to watch this week. Cite the source (`data/snapshot-...`
    or a wiki page).
 6. If anything durable came out of this (a new pattern, an injury mention, a
-   race goal) — do the **Ingest** operation below.
+   race goal), ingest it into the wiki — cite `data/snapshot-...` where it
+   applies, `compiled-from: conversation` where it doesn't (see
+   `.wiki/schema.md` once it exists).
 
 ### Threshold rules (mention only when crossed — don't metric-dump)
 
@@ -62,63 +79,13 @@ they're feeling (sleep, soreness, energy) if it matters for today's call.
 If none of the above are crossed, skip wellness commentary entirely — keep
 the briefing tight.
 
-## Wiki layout
+## Wiki mechanics
 
-```
-wiki/
-  index.md      catalog of every page: link + one-line summary, grouped by category
-  log.md        append-only history of wiki operations
-  entities/     concrete things: the athlete, races, gear
-  concepts/     reusable knowledge: patterns, personal thresholds
-```
-
-## Page format
-
-```markdown
----
-title: <human title>
-slug: <kebab-case>            # used for [[slug]] links
-type: entity | concept
-updated: YYYY-MM-DD
-sources: [data/snapshot-2026-07-20.json, ...]
----
-
-# Title
-
-Body. Link other pages with [[slug]]. Cite raw data files so claims are traceable.
-
-## See also
-- [[other-slug]]
-```
-
-Conventions:
-- **One subject per page.** Split before a page sprawls.
-- **Cross-link liberally** with `[[slug]]`. A `[[slug]]` with no page yet marks
-  a page worth writing — not an error.
-- **Cite sources.** Every quantitative claim names the raw data file it came from.
-- Keep this `CLAUDE.md` lean — it loads into every session. Detail belongs in wiki pages.
-
-## Operations
-
-### Ingest (a briefing or conversation surfaced something durable)
-1. Write/extend the relevant entity or concept page (cite the source).
-2. Update `wiki/index.md`.
-3. Append to `wiki/log.md`.
-
-### Query (athlete asks a question)
-1. Search relevant wiki pages first; fall back to raw `data/` files for gaps.
-2. Answer with citations to the pages/files used.
-3. If the synthesis was non-trivial and reusable, file it back as a new/updated
-   page + log it.
-
-### Lint (periodic health check)
-Scan for: contradictions between pages, stale claims (check `updated:` vs
-`data/` files), orphan pages, missing cross-references, and `[[slugs]]` with
-no page. Report findings; fix the cheap ones; surface the rest.
-
-## log.md format
-Append-only, newest at the bottom:
-```
-## [YYYY-MM-DD] <briefing|ingest|query|lint|create> | <short title>
-- what changed / what was decided
-```
+Layout, page format, frontmatter, ingest/query/lint operations, and the
+activity log are all owned by llm-wiki itself (see its
+[wiki-structure reference](https://github.com/nvk/llm-wiki/blob/master/claude-plugin/skills/wiki-manager/references/wiki-structure.md))
+— don't reinvent them here. `.wiki/schema.md` (created on first init) holds
+the wearcoach-specific vocabulary (entity types like `athlete`/`race`/`gear`,
+what counts as a `concept`). Keep this `CLAUDE.md` lean — it loads into every
+session; wiki-mechanics detail belongs to llm-wiki, domain detail belongs in
+`.wiki/` pages.
